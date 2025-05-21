@@ -113,7 +113,7 @@ export default function CreateProposal() {
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(Number(e.target.value))}
-                placeholder="Amount($MB2B)"
+                placeholder="Amount($GET)"
                 className="input input-bordered w-full mb-4"
               />
             </div>

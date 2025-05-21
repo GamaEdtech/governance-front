@@ -183,7 +183,7 @@ export default function ShowProposal() {
             setVoteLoading(false)
           }
         } else {
-          setNotice({ msg: "You don't have any MB2B token", type: 'err' })
+          setNotice({ msg: "You don't have any $GET token", type: 'err' })
         }
       } catch (err) {
         console.log(err)

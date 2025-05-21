@@ -18,7 +18,7 @@ export default function Home() {
             target="_blank"
             href="https://www.orca.so/?tokenIn=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&tokenOut=BdLaNH3m6da2jXkx6XpGwLkUEKB4EbQWxLxntv5BuvAn"
           >
-            Buy MB2B Token
+            Buy $GET Token
           </a>
         </div>
         <div className="prose">
@@ -27,7 +27,7 @@ export default function Home() {
         </div>
         {/* <p>
           For Review, Voting and Create Proposal Connect your Wallet and also
-          you need first have some MB2B Token
+          you need first have some $GET Token
         </p> */}
       </main>
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
