@@ -33,5 +33,5 @@ export const getProvider = () => {
 
 export const getProgram = () => {
   const provider = getProvider()
-  return new Program(idl as Idl, programID, provider)
+  return new Program(idl as unknown as Idl, programID, provider)
 }
