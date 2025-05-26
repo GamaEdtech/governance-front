@@ -3,12 +3,10 @@
 import { useParams } from 'next/navigation'
 import { getProgram } from '@/utils/connectAnchorProgram' // Adjust the path as needed
 import { web3, AnchorError, AnchorProvider, BN } from '@project-serum/anchor'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
 import Link from 'next/link'
-import { getAccount } from '@solana/spl-token'
-import { string } from 'zod'
 
 interface Proposal {
   owner: string
@@ -29,6 +27,62 @@ export default function ShowProposal() {
   const [details, setDetails] = useState<Proposal | null>(null)
   const [notice, setNotice] = useState({ msg: '', type: '' })
 
+  const getProposal = useCallback(
+    async (key: string) => {
+      setLoading(true)
+      const proposalPublicKey = new PublicKey(key)
+      const program = getProgram()
+      const provider = program.provider as AnchorProvider
+
+      try {
+        const proposal = await program.account.proposal.fetch(proposalPublicKey)
+
+        const voteData = { hasVoted: false, votePower: 0 }
+
+        //Check user vote
+        if (publicKey) {
+          const [pdaPublicKey] = await PublicKey.findProgramAddressSync(
+            [
+              Buffer.from('vote-record'),
+              proposalPublicKey.toBuffer(),
+              provider.wallet.publicKey.toBuffer()
+            ],
+            program.programId
+          )
+
+          try {
+            const proposalVote = await program.account.voteRecord.fetch(
+              pdaPublicKey
+            )
+            voteData.hasVoted = proposalVote.hasVoted as boolean
+            voteData.votePower = proposalVote.votePower as number
+          } catch {
+            voteData.hasVoted = false
+            voteData.votePower = 0
+          }
+        }
+        //End check user vote
+
+        return {
+          owner: proposal.owner,
+          title: proposal.title,
+          brief: proposal.brief,
+          cate: proposal.cate,
+          expiresAt: Number(proposal.expiresAt),
+          hasVoted: voteData.hasVoted,
+          votePower: Number(voteData.votePower),
+          agreeVotes: Number(proposal.agreeVotes),
+          disagreeVotes: Number(proposal.disagreeVotes)
+        } as Proposal
+      } catch (err) {
+        throw new Error(`Load Error ${err}`)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [publicKey]
+  )
+
   useEffect(() => {
     const fetchProposal = async () => {
       if (id && typeof id === 'string') {
@@ -45,60 +99,7 @@ export default function ShowProposal() {
     }
 
     fetchProposal() // Call the async function
-  }, [id])
-
-  const getProposal = async (key: string) => {
-    setLoading(true)
-    const proposalPublicKey = new PublicKey(key)
-    const program = getProgram()
-    const provider = program.provider as AnchorProvider
-
-    try {
-      const proposal = await program.account.proposal.fetch(proposalPublicKey)
-
-      let voteData = { hasVoted: false, votePower: 0 }
-
-      //Check user vote
-      if (publicKey) {
-        const [pdaPublicKey] = await PublicKey.findProgramAddressSync(
-          [
-            Buffer.from('vote-record'),
-            proposalPublicKey.toBuffer(),
-            provider.wallet.publicKey.toBuffer()
-          ],
-          program.programId
-        )
-
-        try {
-          const proposalVote = await program.account.voteRecord.fetch(
-            pdaPublicKey
-          )
-          voteData.hasVoted = proposalVote.hasVoted as boolean
-          voteData.votePower = proposalVote.votePower as number
-        } catch {
-          voteData.hasVoted = false
-          voteData.votePower = 0
-        }
-      }
-      //End check user vote
-
-      return {
-        owner: proposal.owner,
-        title: proposal.title,
-        brief: proposal.brief,
-        cate: proposal.cate,
-        expiresAt: Number(proposal.expiresAt),
-        hasVoted: voteData.hasVoted,
-        votePower: Number(voteData.votePower),
-        agreeVotes: Number(proposal.agreeVotes),
-        disagreeVotes: Number(proposal.disagreeVotes)
-      } as Proposal
-    } catch (err) {
-      throw new Error('Load Error')
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [id, getProposal])
 
   function convertUrlsToLinks(text: string) {
     const urlRegex = /https:\/\/[^\s]+/g // Regular expression to match https URLs
@@ -119,7 +120,7 @@ export default function ShowProposal() {
     const mintAccountPublicKey = new PublicKey(mintId as string)
     if (publicKey)
       try {
-        let response =
+        const response =
           await program.provider.connection.getParsedTokenAccountsByOwner(
             publicKey,
             {

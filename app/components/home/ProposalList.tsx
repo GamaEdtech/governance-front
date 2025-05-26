@@ -1,12 +1,11 @@
 'use client'
 import { getProgram } from '@/utils/connectAnchorProgram' // Adjust the path as needed
-import { publicKey } from '@coral-xyz/anchor/dist/cjs/utils'
 import { ProgramAccount } from '@project-serum/anchor'
 import { web3, AnchorError, AnchorProvider } from '@project-serum/anchor'
 import Link from 'next/link'
 import { PublicKey } from '@solana/web3.js'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import dayjs from 'dayjs'
 interface Proposal {
   id: PublicKey
@@ -42,6 +41,7 @@ export default function ProposalList() {
       const proposals = await program.account.proposal.all()
 
       const proposalArray: Proposal[] = proposals.map(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (proposal: ProgramAccount<any>) => ({
           id: proposal.publicKey,
           owner: proposal.account.owner, // Convert the owner publicKey to base58
